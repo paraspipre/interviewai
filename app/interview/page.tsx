@@ -80,9 +80,10 @@ const InterviewPage = () => {
   const chainRef = useRef<ConversationChain>();
 
   const initializeAI = async (systemp: string) => {
+    const token = process.env.NEXT_PUBLIC_HF_TOKEN;
     const model = new HuggingFaceInference({
       model: "meta-llama/Meta-Llama-3-8B-Instruct",
-      apiKey: process.env.HF_TOKEN, // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
+      apiKey: token, // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
       maxTokens: 200,
     });
 
