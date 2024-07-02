@@ -69,7 +69,7 @@ const InterviewPage = () => {
   }
 
 
-  const hf = new HfInference(process.env.HUGGINGFACEHUB_API_TOKEN);
+  const hf = new HfInference(process.env.HUGGINGFACEHUB_API_KEY);
 
   
 
@@ -82,7 +82,7 @@ const InterviewPage = () => {
   const initializeAI = async (systemp: string) => {
     const model = new HuggingFaceInference({
       model: "meta-llama/Meta-Llama-3-8B-Instruct",
-      apiKey: process.env.HUGGINGFACEHUB_API_TOKEN, // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
+      apiKey: process.env.HUGGINGFACEHUB_API_KEY, // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
       maxTokens:200
     });
 
