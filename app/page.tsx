@@ -119,7 +119,7 @@ export default function Home() {
         <h1 className="text-[48px] sm:text-[64px]">Interview AI </h1>
         <h3 className="text-end">by Paras Pipre</h3>
       </div>
-      <div className="flex items-center gap-2 mt-32 mb-4">
+      <div className="flex items-center gap-2 mt-28 mb-4">
         <input
           className="text-black focus:outline-none my-4 p-2 rounded-lg"
           type="text"
@@ -140,14 +140,24 @@ export default function Home() {
         >
           <HiDocumentArrowUp />
         </button>
-
       </div>
-        <button
-          className="py-3 px-20 bg-purple-600 rounded-3xl"
-          onClick={handleSubmit}
-        >
-          Start
-        </button>
+      <button
+        className="py-3 px-20 bg-purple-600 rounded-3xl"
+        onClick={handleSubmit}
+      >
+        Start
+      </button>
+
+      <div className="mt-28">
+        <div></div>
+        <div>
+          Website is <span className="text-green-600">FREE</span> so be{" "}
+          <span className="text-red-600">PATIENT!!!</span>
+        </div>
+        <div>
+          If anything wrong <span className="text-red-600">RELOAD!!!</span>{" "}
+        </div>
+      </div>
     </main>
   );
 }

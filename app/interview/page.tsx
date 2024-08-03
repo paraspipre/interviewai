@@ -106,11 +106,12 @@ const InterviewPage = () => {
   const StopInterview = () => {
     setRes("")
     resetTranscript();
+    SpeechRecognition.stopListening();
     router.replace("/interview/analysis");
   }
 
   return (
-    <div className="flex flex-col p-10 h-screen">
+    <div className="flex flex-col p-2 sm:p-10 h-screen">
       <h1 className="text-xl">
         Hello {status === "authenticated" && session.user?.name}
       </h1>
