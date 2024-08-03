@@ -120,23 +120,46 @@ const InterviewPage = () => {
             <video ref={videoref} id="videoid" width="750" height="500"></video>
           </div>
           <div className="sm:w-[50%] h-full flex flex-col justify-between px-2">
-            <div className="">
+            <div className="h-[300px] sm:h-[50%] overflow-y-scroll">
               <div className="text-center">AI Interviewer</div>
               {thinking ? (
                 <div>Thinking...</div>
               ) : (
-                <h3 className="overflow-scroll">{res}</h3>
+                <h3 className="">
+                  {res} sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g
+                  dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn
+                  sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng
+                  gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g
+                  dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn
+                  sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng
+                  gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g
+                  dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn
+                  sgknsdg g dsskng gsgn sgknsdg g dsskng gsgnsgknsdg g dsskng
+                  gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g
+                  dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn
+                  sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng
+                  gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g
+                  dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn
+                  sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng
+                  gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g
+                  dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn
+                  sgknsdg g dsskng gsgn
+                </h3>
               )}
             </div>
-            <div className=" ">
+            <div className="h-[300px] sm:h-[50%] overflow-y-scroll ">
               <div className="text-center ">
                 {status === "authenticated" && session.user?.name}
               </div>
-              {listening ? <p className="overflow-scroll">{transcript}</p> : ""}
+              {listening ? (
+                <p className="overflow-y-scroll">{transcript}</p>
+              ) : (
+                ""
+              )}
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-center p-4">
+        <div className="fixed flex  bottom-0 left-0 w-full items-center justify-center p-4">
           {listening ? (
             <div className="flex relative p-2">
               {" "}
