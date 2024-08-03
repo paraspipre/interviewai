@@ -126,24 +126,7 @@ const InterviewPage = () => {
                 <div>Thinking...</div>
               ) : (
                 <h3 className="">
-                  {res} sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g
-                  dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn
-                  sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng
-                  gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g
-                  dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn
-                  sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng
-                  gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g
-                  dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn
-                  sgknsdg g dsskng gsgn sgknsdg g dsskng gsgnsgknsdg g dsskng
-                  gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g
-                  dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn
-                  sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng
-                  gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g
-                  dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn
-                  sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng
-                  gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g
-                  dsskng gsgn sgknsdg g dsskng gsgn sgknsdg g dsskng gsgn
-                  sgknsdg g dsskng gsgn
+                  {res}
                 </h3>
               )}
             </div>
