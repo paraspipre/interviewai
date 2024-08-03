@@ -68,9 +68,6 @@ const InterviewPage = () => {
       ?.split("AI:")
       ?.slice(1)
       ?.join(" ")
-      ?.split("System:")
-      ?.slice(1)
-      ?.join(" ");
     
     setRes(reply);
     setThinking(false)
@@ -132,7 +129,7 @@ const InterviewPage = () => {
                 {status === "authenticated" && session.user?.name}
               </div>
               {listening ? (
-                <p className="overflow-y-scroll">{transcript}</p>
+                <p className="">{transcript}</p>
               ) : (
                 ""
               )}
