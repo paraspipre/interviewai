@@ -27,9 +27,9 @@ import {
   RunnableWithMessageHistory,
 } from "@langchain/core/runnables";
 import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
-import { HiDocumentArrowUp } from "react-icons/hi2";
-import { FaMicrophone } from "react-icons/fa";
-import { FaRegStopCircle } from "react-icons/fa";
+import { TiArrowRepeat } from "react-icons/ti";
+import { FaMicrophoneSlash } from "react-icons/fa";
+import { IoExit } from "react-icons/io5";
 import { Context } from "../context/ChainContext";
 
 
@@ -63,11 +63,14 @@ const InterviewPage = () => {
     );
     console.log({ resdata });
     const reply = resdata?.answer
-      .split("(Note:")[0]
-      .split("Human:")[0]
-      .split("AI:")
-      .slice(1)
-      .join(" ");
+      ?.split("(Note:")[0]
+      ?.split("Human:")[0]
+      ?.split("AI:")
+      ?.slice(1)
+      ?.join(" ")
+      ?.split("System:")
+      ?.slice(1)
+      ?.join(" ");
     
     setRes(reply);
     setThinking(false)
@@ -120,17 +123,11 @@ const InterviewPage = () => {
             <video ref={videoref} id="videoid" width="750" height="500"></video>
           </div>
           <div className="sm:w-[50%] h-full flex flex-col justify-between px-2">
-            <div className="h-[300px] sm:h-[50%] overflow-y-scroll">
+            <div className="h-[200px] sm:h-[50%] overflow-y-scroll">
               <div className="text-center">AI Interviewer</div>
-              {thinking ? (
-                <div>Thinking...</div>
-              ) : (
-                <h3 className="">
-                  {res}
-                </h3>
-              )}
+              {thinking ? <div>Thinking...</div> : <h3 className="">{res}</h3>}
             </div>
-            <div className="h-[300px] sm:h-[50%] overflow-y-scroll ">
+            <div className="h-[200px] sm:h-[50%] overflow-y-scroll ">
               <div className="text-center ">
                 {status === "authenticated" && session.user?.name}
               </div>
@@ -142,33 +139,54 @@ const InterviewPage = () => {
             </div>
           </div>
         </div>
-        <div className="fixed flex  bottom-0 left-0 w-full items-center justify-center p-4">
-          {listening ? (
-            <div className="flex relative p-2">
-              {" "}
+        <div className="fixed flex  bottom-0 left-0 w-full items-center justify-center gap-4 sm:gap-12  p-4 backdrop-blur-2xl">
+          {listening && (
+            <div className="relative">
               {hover && (
-                <div className="absolute bottom-16 left-0 backdrop-blur-xl p-2 rounded-12">
-                  Click after talking 👇🏻
+                <div className="absolute bottom-16 left-0 backdrop-blur-2xl p-2 rounded-12">
+                  Click after answering 👇🏻
                 </div>
               )}
               <button
                 onMouseOver={() => setHover(false)}
                 onMouseLeave={() => setHover(true)}
-                className="flex items-center p-2 bg-red-600 rounded-full"
+                className="flex items-center p-4 text-3xl bg-red-600 rounded-full"
                 onClick={onStop}
               >
-                <FaMicrophone /> Listening
+                <FaMicrophoneSlash />
               </button>
             </div>
-          ) : (
-            ""
           )}
-          <div>
+          <div className="relative">
+            {hover && (
+              <div className="absolute bottom-16 left-0 backdrop-blur-2xl p-2 rounded-12">
+                Click to reset transcript 👇🏻
+              </div>
+            )}
             <button
-              className="flex items-center p-2 bg-red-600 rounded-full gap-2"
+              onMouseOver={() => setHover(false)}
+              onMouseLeave={() => setHover(true)}
+              className="flex items-center p-4 text-3xl bg-purple-600 rounded-full"
+              onClick={() => resetTranscript()}
+            >
+              <TiArrowRepeat />
+            </button>
+          </div>
+          <div className="relative">
+            {hover && (
+              <div
+                onMouseOver={() => setHover(false)}
+                onMouseLeave={() => setHover(true)}
+                className="absolute bottom-16 left-0 backdrop-blur-2xl p-2 rounded-12"
+              >
+                Click to end interview 👇🏻
+              </div>
+            )}
+            <button
+              className="flex items-center p-4 text-3xl bg-red-600 rounded-full gap-2"
               onClick={StopInterview}
             >
-              <FaRegStopCircle /> Stop Interview
+              <IoExit />
             </button>
           </div>
         </div>
