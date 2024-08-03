@@ -2,25 +2,12 @@
 import "regenerator-runtime/runtime";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, MutableRefObject, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { HuggingFaceInference } from "@langchain/community/llms/hf";
-import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
-
 import {
-  HumanMessage,
-  AIMessage,
-  SystemMessage,
-} from "@langchain/core/messages";
-import { ChatMessageHistory } from "langchain/stores/message/in_memory";
-import {
-  ChatPromptTemplate,
-  PromptTemplate,
-  SystemMessagePromptTemplate,
-  AIMessagePromptTemplate,
-  HumanMessagePromptTemplate,
+  ChatPromptTemplate
 } from "@langchain/core/prompts";
 
-import { HfInference } from "@huggingface/inference";
 
 import { AudioRecorder, useAudioRecorder } from "react-audio-voice-recorder";
 import SpeechRecognition, {
@@ -28,122 +15,84 @@ import SpeechRecognition, {
 } from "react-speech-recognition";
 
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { TextLoader } from "langchain/document_loaders/fs/text";
 import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
-import { ConversationChain } from "langchain/chains";
 
 import pdfToText from "react-pdftotext";
-import { ChainValues } from "@langchain/core/utils/types";
 import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retriever";
 import { MessagesPlaceholder } from "@langchain/core/prompts";
-import { BufferMemory } from "langchain/memory/index";
-import useAI from "../hooks/useAI";
+import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createRetrievalChain } from "langchain/chains/retrieval";
+import { Runnable } from "@langchain/core/runnables";
+import {
+  RunnableWithMessageHistory,
+} from "@langchain/core/runnables";
+import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
+import { HiDocumentArrowUp } from "react-icons/hi2";
+import { FaMicrophone } from "react-icons/fa";
+import { FaRegStopCircle } from "react-icons/fa";
+import { Context } from "../context/ChainContext";
+
 
 const InterviewPage = () => {
-  const {
-    transcript,
-    listening,
-    resetTranscript,
-    browserSupportsSpeechRecognition,
-  } = useSpeechRecognition();
-
-
-  const recorderControls = useAudioRecorder();
-  const videoref = useRef<HTMLVideoElement>(null);
   const router = useRouter();
-
   const { data: session, status } = useSession();
-  const [resume, setResume] = useState<string>("resume");
-  const [role, setRole] = useState<string>("Software Engineer");
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file: any = e?.target?.files?.[0];
-    pdfToText(file)
-      .then((text) => setResume(text))
-      .catch((error) => console.error("Failed to extract text from pdf"));
-  };
-
- 
   if (status === "unauthenticated") {
     router.replace("/api/auth/signin");
   }
+  const { chainRef, messageHistories , sessionId } = useContext(Context);
+  const {transcript,listening,resetTranscript} = useSpeechRecognition();
+  const videoref = useRef<HTMLVideoElement>(null);
+  const [res, setRes] = useState<string>("");
+  const [hover, setHover] = useState(true);
+  const [thinking, setThinking] = useState(false);
 
+  useEffect(() => {
+    startVideo()
+    startAudio()
+  },[])
 
-  // const hf = new HfInference(process.env.HF_TOKEN);
+  const startinterview = useCallback(async (trans: string) => {
+    console.log(trans);
+    setRes("");
+    setThinking(true)
+    const resdata = await chainRef.current?.invoke(
+      {
+        input: trans,
+      },
+      { configurable: { sessionId } }
+    );
+    console.log({ resdata });
+    const reply = resdata?.answer
+      .split("(Note:")[0]
+      .split("Human:")[0]
+      .split("AI:")
+      .slice(1)
+      .join(" ");
+    
+    setRes(reply);
+    setThinking(false)
 
-  
-
-  const [trans, setTranscript] = useState<string>("Hello");
-
-  const [res, setRes] = useState<string>("res");
-
-  const chainRef = useRef<ConversationChain>();
-
-  const initializeAI = async (systemp: string) => {
-    const token = process.env.NEXT_PUBLIC_HF_TOKEN;
-    const model = new HuggingFaceInference({
-      model: "meta-llama/Meta-Llama-3-8B-Instruct",
-      apiKey: token, // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
-      maxTokens: 200,
-    });
-
-    const template = systemp;
-    const systemMessagePrompt =
-      SystemMessagePromptTemplate.fromTemplate(template);
-
-    const humanTemplate = "{input}";
-    const humanMessagePrompt =
-      HumanMessagePromptTemplate.fromTemplate(humanTemplate);
-
-    const chatPrompt = ChatPromptTemplate.fromMessages([
-      systemMessagePrompt,
-      humanMessagePrompt,
-    ]);
-    chainRef.current = new ConversationChain({
-      llm: model,
-      prompt: chatPrompt,
-    });
-    startinterview(trans);
-  };
-
-  const startinterview = async (trans: any) => {
-    console.log("invoke model start", chainRef);
-    const resdata = await chainRef.current?.invoke({
-      input: trans,
-    });
-    console.log(resdata?.response);
-    setRes(resdata?.response);
-
-    console.log("text to speech start");
-    let utterance = new SpeechSynthesisUtterance(resdata?.response);
+    let utterance = new SpeechSynthesisUtterance(reply);
     console.log(utterance);
-    utterance.onend = start;
-    utterance.rate = 3.0;
+    utterance.onend = startAudio;
+    utterance.rate = 1.0;
     speechSynthesis.speak(utterance);
-  };
+    console.log(messageHistories)
+  },[chainRef, messageHistories, sessionId]);
 
-  const start = () => {
+  const startAudio = () => {
     SpeechRecognition.startListening({ continuous: true });
   };
 
   const onStop = () => {
     SpeechRecognition.stopListening()
       .then(() => {
-        setTranscript(transcript);
-        resetTranscript();
+        startinterview(transcript);
+        resetTranscript()
       })
-      .then(() => {
-        startinterview(trans);
-      });
   };
 
-   const handlesubmit = () => {
-     const person = session?.user?.name;
-     const systemp = `You are a very polite interviewer for ${role} job role, take interview of ${person} ask question related to job role and resume provided in context, also give response according to the answer giver by ${person}, take name of person to comfort and make environment friendly. ask one question at a time. resume ${resume}`;
-     initializeAI(systemp);
-   };
-
-  const startvideo = () => {
+  const startVideo = () => {
     if (typeof window !== "undefined") {
       navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
         if (videoref.current) {
@@ -153,62 +102,69 @@ const InterviewPage = () => {
       });
     }
   };
-  useEffect(() => {
-    startvideo();
-  });
+
+  const StopInterview = () => {
+    setRes("")
+    resetTranscript();
+    router.replace("/interview/analysis");
+  }
 
   return (
-    <div className="flex flex-col items-center p-10">
-      <h1 className="text-xl mb-20">
+    <div className="flex flex-col p-10 h-screen">
+      <h1 className="text-xl">
         Hello {status === "authenticated" && session.user?.name}
       </h1>
-      <div className="flex flex-col items-center p-10 gap-2">
-        <input
-          type="file"
-          name="resume"
-          onChange={(e) => handleFileChange(e)}
-          hidden
-          id="resume"
-        />
-        <button
-          onClick={() => document.getElementById("resume")?.click()}
-          className="py-3 px-10 bg-purple-600 rounded-3xl"
-        >
-          upload resume
-        </button>
-        <input
-          className="text-black focus:outline-none my-4 p-2 rounded-lg"
-          type="text"
-          name="role"
-          placeholder="enter your role"
-          onChange={(e) => setRole(e?.target?.value)}
-        />
-        <button
-          className="py-3 px-10 bg-purple-600 rounded-3xl"
-          onClick={() => handlesubmit()}
-        >
-          Start Interview
-        </button>
-      </div>
-      <div className="flex w-[80%]">
-        <div className="w-[50%]">
-          <h3>{res}</h3>
+      <div className="w-full flex flex-col justify-between h-full">
+        <div className="flex flex-col h-full sm:flex-row">
+          <div className="sm:w-[50%]">
+            <video ref={videoref} id="videoid" width="750" height="500"></video>
+          </div>
+          <div className="sm:w-[50%] h-full flex flex-col justify-between px-2">
+            <div className="">
+              <div className="text-center">AI Interviewer</div>
+              {thinking ? (
+                <div>Thinking...</div>
+              ) : (
+                <h3 className="overflow-scroll">{res}</h3>
+              )}
+            </div>
+            <div className=" ">
+              <div className="text-center ">
+                {status === "authenticated" && session.user?.name}
+              </div>
+              {listening ? <p className="overflow-scroll">{transcript}</p> : ""}
+            </div>
+          </div>
         </div>
-        <div className="w-[50%]">
-          <video ref={videoref} id="videoid" width="750" height="500"></video>
+        <div className="flex items-center justify-center p-4">
           {listening ? (
-            <div>
-              <p>{transcript}</p>
+            <div className="flex relative p-2">
+              {" "}
+              {hover && (
+                <div className="absolute bottom-16 left-0 backdrop-blur-xl p-2 rounded-12">
+                  Click after talking 👇🏻
+                </div>
+              )}
               <button
-                className=" px-2 bg-red-600 rounded-full"
+                onMouseOver={() => setHover(false)}
+                onMouseLeave={() => setHover(true)}
+                className="flex items-center p-2 bg-red-600 rounded-full"
                 onClick={onStop}
               >
-                X
+                <FaMicrophone /> Listening
               </button>
             </div>
           ) : (
             ""
           )}
+          <div>
+            <button
+              className="flex items-center p-2 bg-red-600 rounded-full gap-2"
+              onClick={StopInterview}
+            >
+              <FaRegStopCircle /> Stop Interview
+            </button>
+          </div>
         </div>
       </div>
     </div>
