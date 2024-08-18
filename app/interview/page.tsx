@@ -36,49 +36,54 @@ import { Context } from "../context/ChainContext";
 const InterviewPage = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
-  if (status === "unauthenticated") {
-    router.replace("/api/auth/signin");
-  }
+  // if (status === "unauthenticated") {
+  //   router.replace("/api/auth/signin");
+  // }
   const { chainRef, messageHistories , sessionId } = useContext(Context);
   const {transcript,listening,resetTranscript} = useSpeechRecognition();
   const videoref = useRef<HTMLVideoElement>(null);
   const [res, setRes] = useState<string>("");
   const [hover, setHover] = useState(true);
   const [thinking, setThinking] = useState(false);
+  const [openintro, setOpenIntro] = useState(true);
 
   useEffect(() => {
     startVideo()
     startAudio()
   },[])
 
-  const startinterview = useCallback(async (trans: string) => {
-    console.log(trans);
-    setRes("");
-    setThinking(true)
-    const resdata = await chainRef.current?.invoke(
-      {
-        input: trans,
-      },
-      { configurable: { sessionId } }
-    );
-    console.log({ resdata });
-    const reply = resdata?.answer
-      ?.split("(Note:")[0]
-      ?.split("Human:")[0]
-      ?.split("AI:")
-      ?.slice(1)
-      ?.join(" ")
-    
-    setRes(reply);
-    setThinking(false)
+  const startinterview = useCallback(
+    async (trans: string) => {
+      console.log(trans);
+      setRes("");
+      setThinking(true);
+      const resdata = await chainRef.current?.invoke(
+        {
+          input: trans,
+        },
+        { configurable: { sessionId } }
+      );
+      console.log({ resdata });
+      const reply = resdata?.answer
+        ?.split("(Note:")[0]
+        ?.split("Human:")[0]
+        ?.split("AI:")
+        ?.slice(1)
+        ?.join(" ");
 
-    let utterance = new SpeechSynthesisUtterance(reply);
-    console.log(utterance);
-    utterance.onend = startAudio;
-    utterance.rate = 1.0;
-    speechSynthesis.speak(utterance);
-    console.log(messageHistories)
-  },[chainRef, messageHistories, sessionId]);
+      setRes(reply);
+      setThinking(false);
+
+      let utterance = new SpeechSynthesisUtterance(reply);
+      console.log(utterance);
+      utterance.onend = startAudio;
+      utterance.rate = 1.0;
+      speechSynthesis.speak(utterance);
+      console.log(messageHistories);
+      resetTranscript();
+    },
+    [chainRef, messageHistories, sessionId, resetTranscript]
+  );
 
   const startAudio = () => {
     SpeechRecognition.startListening({ continuous: true });
@@ -88,7 +93,6 @@ const InterviewPage = () => {
     SpeechRecognition.stopListening()
       .then(() => {
         startinterview(transcript);
-        resetTranscript()
       })
   };
 
@@ -105,7 +109,6 @@ const InterviewPage = () => {
 
   const StopInterview = () => {
     setRes("")
-    resetTranscript();
     SpeechRecognition.stopListening();
     router.replace("/interview/analysis");
   }
@@ -129,22 +132,13 @@ const InterviewPage = () => {
               <div className="text-center ">
                 {status === "authenticated" && session.user?.name}
               </div>
-              {listening ? (
-                <p className="">{transcript}</p>
-              ) : (
-                ""
-              )}
+              {listening ? <p className="">{transcript}</p> : ""}
             </div>
           </div>
         </div>
         <div className="fixed flex  bottom-0 left-0 w-full items-center justify-center gap-4 sm:gap-12  p-4 backdrop-blur-2xl">
           {listening && (
-            <div className="relative">
-              {hover && (
-                <div className="absolute bottom-16 left-0 backdrop-blur-2xl p-2 rounded-12">
-                  Click after answering 👇🏻
-                </div>
-              )}
+            <div className="">
               <button
                 onMouseOver={() => setHover(false)}
                 onMouseLeave={() => setHover(true)}
@@ -155,12 +149,7 @@ const InterviewPage = () => {
               </button>
             </div>
           )}
-          <div className="relative">
-            {hover && (
-              <div className="absolute bottom-16 left-0 backdrop-blur-2xl p-2 rounded-12">
-                Click to reset transcript 👇🏻
-              </div>
-            )}
+          <div className="">
             <button
               onMouseOver={() => setHover(false)}
               onMouseLeave={() => setHover(true)}
@@ -170,16 +159,7 @@ const InterviewPage = () => {
               <TiArrowRepeat />
             </button>
           </div>
-          <div className="relative">
-            {hover && (
-              <div
-                onMouseOver={() => setHover(false)}
-                onMouseLeave={() => setHover(true)}
-                className="absolute bottom-16 left-0 backdrop-blur-2xl p-2 rounded-12"
-              >
-                Click to end interview 👇🏻
-              </div>
-            )}
+          <div className="">
             <button
               className="flex items-center p-4 text-3xl bg-red-600 rounded-full gap-2"
               onClick={StopInterview}
@@ -189,6 +169,25 @@ const InterviewPage = () => {
           </div>
         </div>
       </div>
+      {openintro && (
+        <div className="absolute top-0 right-0 w-full h-screen flex flex-col items-center justify-center backdrop-blur-2xl">
+          <ul
+            onClick={() => setOpenIntro(false)}
+            className="bg-white text-black w-fit h-fit p-5"
+          >
+            <li>Start by introducting yourself.</li>
+            <li className="flex gap-2">
+              <FaMicrophoneSlash /> after every giving answer.
+            </li>
+            <li className="flex gap-2">
+              <TiArrowRepeat /> to reset the answer.
+            </li>
+            <li className="flex gap-2">
+              <IoExit /> to exit the interview.
+            </li>
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

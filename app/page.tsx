@@ -18,13 +18,17 @@ import { useSession } from "next-auth/react";
 import { HiDocumentArrowUp } from "react-icons/hi2";
 import { useRouter } from "next/navigation";
 import pdfToText from "react-pdftotext";
+
 export default function Home() {
-  
   const router = useRouter();
-  const { chainRef, messageHistories } = useContext(Context);
-  const [resume, setResume] = useState<string>("resume");
-  const [role, setRole] = useState<string>("Software Engineer");
   const { data: session, status } = useSession();
+  if (status === "unauthenticated") {
+    router.replace("/api/auth/signin");
+  }
+  const { chainRef, messageHistories } = useContext(Context);
+  const [resume, setResume] = useState<string>("");
+  const [role, setRole] = useState<string>("Software Engineer");
+  const [loading,setLoading] = useState(false)
   const person = status === "authenticated" ? session?.user?.name : "User";
 
   const initializeAI = useCallback(async () => {
@@ -100,18 +104,21 @@ export default function Home() {
     });
   }, [chainRef, messageHistories, person, resume, role]);
 
-  const handleSubmit = () => {
-    if (resume && role) {
+  const handleSubmit = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    try {
+      setLoading(true)
+      const file: any = e?.target?.files?.[0];
+      const text = await pdfToText(file);
+      setResume(text);
       initializeAI();
-      router.replace("/interview")
+      router.replace("/interview");
+    } catch (err) {
+      console.log(err)
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file: any = e?.target?.files?.[0];
-    const text = await pdfToText(file);
-    setResume(text);
-  };
+  }; 
 
   return (
     <main className="flex min-h-screen flex-col items-center p-10  sm:p-24">
@@ -130,22 +137,18 @@ export default function Home() {
         <input
           type="file"
           name="resume"
-          onChange={(e) => handleFileChange(e)}
+          onChange={(e) => handleSubmit(e)}
           hidden
           id="resume"
         />
-        <button
-          onClick={() => document.getElementById("resume")?.click()}
-          className="p-2 text-3xl bg-purple-600 rounded-3xl"
-        >
-          <HiDocumentArrowUp />
-        </button>
       </div>
+
       <button
-        className="py-3 px-20 bg-purple-600 rounded-3xl"
-        onClick={handleSubmit}
+        onClick={() => document.getElementById("resume")?.click()}
+        className="py-3 px-10 bg-purple-600 rounded-3xl"
+        disabled={loading}
       >
-        Start
+        {loading ? "Loading" :"Upload Resume to Start"}
       </button>
 
       <div className="mt-28">
