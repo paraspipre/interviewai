@@ -128,7 +128,7 @@ export default function Home() {
       </div>
       <div className="flex items-center gap-2 mt-28 mb-4">
         <input
-          className="text-black focus:outline-none my-4 p-2 rounded-lg"
+          className="text-black focus:outline-none my-4 p-4 rounded-[24px] h-[50px] w-[350px]"
           type="text"
           name="role"
           placeholder="Enter your role"
@@ -151,7 +151,7 @@ export default function Home() {
         {loading ? "Loading" :"Upload Resume to Start"}
       </button>
 
-      <div className="mt-28">
+      {/* <div className="mt-28">
         <div></div>
         <div>
           Website is <span className="text-green-600">FREE</span> so be{" "}
@@ -160,7 +160,7 @@ export default function Home() {
         <div>
           If anything wrong <span className="text-red-600">RELOAD!!!</span>{" "}
         </div>
-      </div>
+      </div> */}
     </main>
   );
 }

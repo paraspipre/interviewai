@@ -20,14 +20,23 @@ type ContextType = {
   messageHistories: Map<string, InMemoryChatMessageHistory>;
   setMap: (key: string, value: any) => void;
   getMap: (key: string) => void;
+  expressionsObject: any;
+  setExpressionsObject: any;
 };
 
 const contextDefaultValues: ContextType = {
-  sessionId :"",
-  chainRef: { current:   new LLMChain({llm,prompt:ChatPromptTemplate.fromMessages([["user", "{input}"]])})} as MutableRefObject<Runnable>,
-   messageHistories: new Map<string, InMemoryChatMessageHistory>(),
-   setMap: (key: string, value: any) => {},
-  getMap: (key: string) => {}
+  sessionId: "",
+  chainRef: {
+    current: new LLMChain({
+      llm,
+      prompt: ChatPromptTemplate.fromMessages([["user", "{input}"]]),
+    }),
+  } as MutableRefObject<Runnable>,
+  messageHistories: new Map<string, InMemoryChatMessageHistory>(),
+  setMap: (key: string, value: any) => {},
+  getMap: (key: string) => {},
+  expressionsObject: [],
+  setExpressionsObject: () => {},
 };
 
 export const Context = createContext<ContextType>(contextDefaultValues);
@@ -35,12 +44,22 @@ export const Context = createContext<ContextType>(contextDefaultValues);
 
 export const Provider = (props: { children: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }) => {
   const [sessionId, setSessionId] = useState(Date.now().toString());
+
+  const [expressionsObject, setExpressionsObject] = useState({
+    angry: 0,
+    disgusted: 0,
+    fearful: 0,
+    happy: 0,
+    neutral: 0,
+    sad: 0,
+    surprised: 0,
+  });
    
   const chainRef = useRef<Runnable>(
     new LLMChain({
       llm,
       prompt: ChatPromptTemplate.fromMessages([
-        ["system", "You are a world class technical documentation writer."],
+        ["system", "You are a world class interviewer who can take interview of any person and ask coding questions also if the role is around programming."],
         ["user", "{input}"],
       ]),
     })
@@ -59,7 +78,17 @@ export const Provider = (props: { children: string | number | bigint | boolean |
    };
 
   return (
-    <Context.Provider value={{ chainRef, sessionId, messageHistories , setMap , getMap }}>
+    <Context.Provider
+      value={{
+        chainRef,
+        sessionId,
+        messageHistories,
+        setMap,
+        getMap,
+        expressionsObject,
+        setExpressionsObject,
+      }}
+    >
       {props.children}
     </Context.Provider>
   );
