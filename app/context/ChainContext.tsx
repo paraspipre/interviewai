@@ -1,81 +1,78 @@
-"use client"
-import { HuggingFaceInference } from "@langchain/community/llms/hf";
+"use client";
 import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
-import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
-import { Runnable, RunnableConfig, RunnableWithMessageHistory } from "@langchain/core/runnables";
-import { LLMChain } from "langchain/chains";
-import { AwaitedReactNode, createContext, Dispatch, JSXElementConstructor, MutableRefObject, ReactElement, ReactNode, ReactPortal, SetStateAction, useRef, useState } from "react";
+import { Runnable } from "@langchain/core/runnables";
+import {
+  createContext,
+  MutableRefObject,
+  ReactNode,
+  useRef,
+  useState,
+} from "react";
 
-const llm = new HuggingFaceInference({
-  model: "mistralai/Mixtral-8x7B-Instruct-v0.1", //mistralai/Mixtral-8x7B-Instruct-v0.1 //meta-llama/Meta-Llama-3-8B-Instruct
-  apiKey: process.env.NEXT_PUBLIC_HF_TOKEN, // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
-  // maxTokens: 800,
-  temperature: 0.7,
-  topP: 0.9,
-});
+// FIX: Simplified type definitions - removed deprecated LLMChain usage
+type ExpressionsObject = {
+  angry: number;
+  disgusted: number;
+  fearful: number;
+  happy: number;
+  neutral: number;
+  sad: number;
+  surprised: number;
+};
 
 type ContextType = {
   sessionId: string;
-  chainRef: MutableRefObject<Runnable>;
+  chainRef: MutableRefObject<Runnable | null>;
   messageHistories: Map<string, InMemoryChatMessageHistory>;
-  setMap: (key: string, value: any) => void;
-  getMap: (key: string) => void;
-  expressionsObject: any;
-  setExpressionsObject: any;
+  setMap: (key: string, value: InMemoryChatMessageHistory) => void;
+  getMap: (key: string) => InMemoryChatMessageHistory | undefined;
+  expressionsObject: ExpressionsObject;
+  setExpressionsObject: (expressions: ExpressionsObject) => void;
+};
+
+const defaultExpressions: ExpressionsObject = {
+  angry: 0,
+  disgusted: 0,
+  fearful: 0,
+  happy: 0,
+  neutral: 0,
+  sad: 0,
+  surprised: 0,
 };
 
 const contextDefaultValues: ContextType = {
   sessionId: "",
-  chainRef: {
-    current: new LLMChain({
-      llm,
-      prompt: ChatPromptTemplate.fromMessages([["user", "{input}"]]),
-    }),
-  } as MutableRefObject<Runnable>,
+  // FIX: Initialize chainRef as null instead of using deprecated LLMChain
+  chainRef: { current: null } as MutableRefObject<Runnable | null>,
   messageHistories: new Map<string, InMemoryChatMessageHistory>(),
-  setMap: (key: string, value: any) => {},
-  getMap: (key: string) => {},
-  expressionsObject: [],
+  setMap: () => {},
+  getMap: () => undefined,
+  expressionsObject: defaultExpressions,
   setExpressionsObject: () => {},
 };
 
 export const Context = createContext<ContextType>(contextDefaultValues);
 
+// FIX: Simplified Provider props type to use ReactNode
+export const Provider = ({ children }: { children: ReactNode }) => {
+  const [sessionId] = useState(Date.now().toString());
+  const [expressionsObject, setExpressionsObject] =
+    useState<ExpressionsObject>(defaultExpressions);
 
-export const Provider = (props: { children: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }) => {
-  const [sessionId, setSessionId] = useState(Date.now().toString());
+  // FIX: No longer creating deprecated LLMChain at module/init level
+  const chainRef = useRef<Runnable | null>(null);
 
-  const [expressionsObject, setExpressionsObject] = useState({
-    angry: 0,
-    disgusted: 0,
-    fearful: 0,
-    happy: 0,
-    neutral: 0,
-    sad: 0,
-    surprised: 0,
-  });
-   
-  const chainRef = useRef<Runnable>(
-    new LLMChain({
-      llm,
-      prompt: ChatPromptTemplate.fromMessages([
-        ["system", "You are a world class interviewer who can take interview of any person and ask coding questions also if the role is around programming."],
-        ["user", "{input}"],
-      ]),
-    })
-   );
+  const [messageHistories, setMapState] = useState<
+    Map<string, InMemoryChatMessageHistory>
+  >(new Map<string, InMemoryChatMessageHistory>());
 
-   const [messageHistories, setMapState] = useState<
-     Map<string, InMemoryChatMessageHistory>
-   >(new Map<string, InMemoryChatMessageHistory>());
+  const setMap = (key: string, value: InMemoryChatMessageHistory) => {
+    setMapState((prevMap) => new Map(prevMap.set(key, value)));
+  };
 
-   const setMap = (key: string, value: any) => {
-     setMapState((prevMap) => new Map(prevMap.set(key, value)));
-   };
-
-   const getMap = (key: string) => {
-     return messageHistories.get(key);
-   };
+  const getMap = (key: string) => {
+    return messageHistories.get(key);
+  };
 
   return (
     <Context.Provider
@@ -89,7 +86,7 @@ export const Provider = (props: { children: string | number | bigint | boolean |
         setExpressionsObject,
       }}
     >
-      {props.children}
+      {children}
     </Context.Provider>
   );
 };

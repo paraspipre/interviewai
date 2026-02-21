@@ -24,6 +24,15 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+  /* FIX: Prevent horizontal overflow on mobile */
+  overflow-x: hidden;
+}
+
+/* FIX: Ensure consistent box-sizing across all elements */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 @layer utilities {
@@ -32,11 +41,23 @@ body {
   }
 }
 
+/* Custom scrollbar hide utility */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 
 .scrollbar-hide {
-  -ms-overflow-style: none; /* For Internet Explorer and Edge */
-  scrollbar-width: none;    /* For Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* FIX: Smooth scrolling for better UX */
+html {
+  scroll-behavior: smooth;
+}
+
+/* FIX: Better focus visibility for accessibility */
+:focus-visible {
+  outline: 2px solid rgb(147, 51, 234);
+  outline-offset: 2px;
 }
