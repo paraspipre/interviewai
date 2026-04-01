@@ -1,95 +1,154 @@
-"use client"
-import { HuggingFaceInference } from "@langchain/community/llms/hf";
-import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
-import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
-import { Runnable, RunnableConfig, RunnableWithMessageHistory } from "@langchain/core/runnables";
-import { LLMChain } from "langchain/chains";
-import { AwaitedReactNode, createContext, Dispatch, JSXElementConstructor, MutableRefObject, ReactElement, ReactNode, ReactPortal, SetStateAction, useRef, useState } from "react";
+"use client";
+import {
+  createContext,
+  useContext,
+  useRef,
+  useState,
+  useCallback,
+  ReactNode,
+} from "react";
 
-const llm = new HuggingFaceInference({
-  model: "mistralai/Mixtral-8x7B-Instruct-v0.1", //mistralai/Mixtral-8x7B-Instruct-v0.1 //meta-llama/Meta-Llama-3-8B-Instruct
-  apiKey: process.env.NEXT_PUBLIC_HF_TOKEN, // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
-  // maxTokens: 800,
-  temperature: 0.7,
-  topP: 0.9,
-});
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-type ContextType = {
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  timestamp?: number;
+}
+
+export interface InterviewConfig {
+  role: string;
+  interviewType: string;
+  interviewerStyle: string;
+  resume: string;
+  userName: string;
+}
+
+export interface ExpressionsData {
+  angry: number;
+  disgusted: number;
+  fearful: number;
+  happy: number;
+  neutral: number;
+  sad: number;
+  surprised: number;
+}
+
+interface ContextType {
+  // Session
   sessionId: string;
-  chainRef: MutableRefObject<Runnable>;
-  messageHistories: Map<string, InMemoryChatMessageHistory>;
-  setMap: (key: string, value: any) => void;
-  getMap: (key: string) => void;
-  expressionsObject: any;
-  setExpressionsObject: any;
+
+  // Interview configuration
+  interviewConfig: InterviewConfig | null;
+  setInterviewConfig: (config: InterviewConfig) => void;
+
+  // Conversation history (replaces InMemoryChatMessageHistory)
+  conversationHistory: ChatMessage[];
+  addMessage: (role: "user" | "assistant", content: string) => void;
+  clearHistory: () => void;
+
+  // Question tracking
+  questionCount: number;
+  setQuestionCount: (n: number) => void;
+
+  // Facial expression data
+  expressionsObject: ExpressionsData;
+  setExpressionsObject: (data: ExpressionsData) => void;
+
+  // Interview timing
+  startTime: number | null;
+  setStartTime: (t: number | null) => void;
+
+  // Legacy ref kept for any remaining references
+  chainRef: React.MutableRefObject<null>;
+  messageHistories: Map<string, unknown>;
+}
+
+const defaultExpressions: ExpressionsData = {
+  angry: 0,
+  disgusted: 0,
+  fearful: 0,
+  happy: 0,
+  neutral: 0,
+  sad: 0,
+  surprised: 0,
 };
 
-const contextDefaultValues: ContextType = {
+const defaultContext: ContextType = {
   sessionId: "",
-  chainRef: {
-    current: new LLMChain({
-      llm,
-      prompt: ChatPromptTemplate.fromMessages([["user", "{input}"]]),
-    }),
-  } as MutableRefObject<Runnable>,
-  messageHistories: new Map<string, InMemoryChatMessageHistory>(),
-  setMap: (key: string, value: any) => {},
-  getMap: (key: string) => {},
-  expressionsObject: [],
+  interviewConfig: null,
+  setInterviewConfig: () => {},
+  conversationHistory: [],
+  addMessage: () => {},
+  clearHistory: () => {},
+  questionCount: 0,
+  setQuestionCount: () => {},
+  expressionsObject: defaultExpressions,
   setExpressionsObject: () => {},
+  startTime: null,
+  setStartTime: () => {},
+  chainRef: { current: null },
+  messageHistories: new Map(),
 };
 
-export const Context = createContext<ContextType>(contextDefaultValues);
+export const Context = createContext<ContextType>(defaultContext);
 
+export function useInterview() {
+  return useContext(Context);
+}
 
-export const Provider = (props: { children: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }) => {
-  const [sessionId, setSessionId] = useState(Date.now().toString());
+// ─── Provider ─────────────────────────────────────────────────────────────────
 
-  const [expressionsObject, setExpressionsObject] = useState({
-    angry: 0,
-    disgusted: 0,
-    fearful: 0,
-    happy: 0,
-    neutral: 0,
-    sad: 0,
-    surprised: 0,
-  });
-   
-  const chainRef = useRef<Runnable>(
-    new LLMChain({
-      llm,
-      prompt: ChatPromptTemplate.fromMessages([
-        ["system", "You are a world class interviewer who can take interview of any person and ask coding questions also if the role is around programming."],
-        ["user", "{input}"],
-      ]),
-    })
-   );
+export function Provider({ children }: { children: ReactNode }) {
+  const [sessionId] = useState(() => Date.now().toString());
+  const [interviewConfig, setInterviewConfigState] = useState<InterviewConfig | null>(null);
+  const [conversationHistory, setConversationHistory] = useState<ChatMessage[]>([]);
+  const [questionCount, setQuestionCount] = useState(0);
+  const [expressionsObject, setExpressionsObject] = useState<ExpressionsData>(defaultExpressions);
+  const [startTime, setStartTime] = useState<number | null>(null);
 
-   const [messageHistories, setMapState] = useState<
-     Map<string, InMemoryChatMessageHistory>
-   >(new Map<string, InMemoryChatMessageHistory>());
+  // Legacy refs (kept so existing code referencing them doesn't crash)
+  const chainRef = useRef<null>(null);
+  const messageHistories = useRef(new Map()).current;
 
-   const setMap = (key: string, value: any) => {
-     setMapState((prevMap) => new Map(prevMap.set(key, value)));
-   };
+  const setInterviewConfig = useCallback((config: InterviewConfig) => {
+    setInterviewConfigState(config);
+  }, []);
 
-   const getMap = (key: string) => {
-     return messageHistories.get(key);
-   };
+  const addMessage = useCallback((role: "user" | "assistant", content: string) => {
+    setConversationHistory((prev) => [
+      ...prev,
+      { role, content, timestamp: Date.now() },
+    ]);
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    setConversationHistory([]);
+    setQuestionCount(0);
+    setStartTime(null);
+    setExpressionsObject(defaultExpressions);
+  }, []);
 
   return (
     <Context.Provider
       value={{
-        chainRef,
         sessionId,
-        messageHistories,
-        setMap,
-        getMap,
+        interviewConfig,
+        setInterviewConfig,
+        conversationHistory,
+        addMessage,
+        clearHistory,
+        questionCount,
+        setQuestionCount,
         expressionsObject,
         setExpressionsObject,
+        startTime,
+        setStartTime,
+        chainRef,
+        messageHistories,
       }}
     >
-      {props.children}
+      {children}
     </Context.Provider>
   );
-};
+}
