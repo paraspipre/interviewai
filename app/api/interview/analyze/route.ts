@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { StateGraph, Annotation, START, END } from "@langchain/langgraph";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-// Allow up to 120s for this route (Vercel/Next.js edge config)
-export const maxDuration = 120;
+// Vercel hobby plan max is 60s
+export const maxDuration = 60;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

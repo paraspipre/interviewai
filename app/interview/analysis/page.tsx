@@ -329,7 +329,7 @@ ${conversationHistory.map((m) => `${m.role === "user" ? "YOU" : "AI"}: ${m.conte
         </div>
 
         {/* ── Tabs ────────────────────────────────────────────────────── */}
-        <div className="flex gap-1 bg-[rgba(var(--bg-secondary),0.6)] p-1 rounded-xl w-fit">
+        <div className="flex gap-1 bg-[rgba(var(--bg-secondary),0.6)] p-1 rounded-xl overflow-x-auto max-w-full">
           {(["overview", "transcript", "emotions"] as const).map((tab) => (
             <button
               key={tab}

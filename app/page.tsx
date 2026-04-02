@@ -391,7 +391,7 @@ export default function Home() {
             </div>
             <span>InterviewAI &copy; {new Date().getFullYear()} · Built by Paras Pipre</span>
           </div>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
             <span className="badge badge-primary">Gemini 2.0 Flash</span>
             <span className="badge badge-primary">LangGraph</span>
             <span className="badge badge-primary">Next.js 14</span>

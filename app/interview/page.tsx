@@ -305,14 +305,14 @@ export default function InterviewPage() {
       <div className="sticky top-14 z-40 bg-[rgba(var(--bg),0.85)] backdrop-blur-xl border-b border-[rgba(var(--border),0.5)] px-4 py-2.5">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           {/* Left: config info */}
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <span className="badge badge-primary capitalize">{interviewConfig?.interviewType || "Interview"}</span>
-            <span className="text-sm font-medium truncate max-w-[160px]">{interviewConfig?.role || "Software Engineer"}</span>
+            <span className="text-sm font-medium truncate max-w-[140px] hidden sm:inline">{interviewConfig?.role || "Software Engineer"}</span>
           </div>
 
           {/* Center: progress */}
-          <div className="flex items-center gap-3 flex-1 max-w-xs mx-auto">
-            <div className="text-xs text-[rgb(var(--fg-muted))] whitespace-nowrap">Q {Math.min(qCount, MAX_Q)}/{MAX_Q}</div>
+          <div className="flex items-center gap-2 flex-1 mx-2 sm:mx-4 sm:max-w-xs">
+            <div className="text-xs text-[rgb(var(--fg-muted))] whitespace-nowrap hidden sm:block">Q {Math.min(qCount, MAX_Q)}/{MAX_Q}</div>
             <div className="progress-bar flex-1">
               <div className="progress-fill" style={{ width: `${Math.min((qCount / MAX_Q) * 100, 100)}%` }} />
             </div>
@@ -440,7 +440,7 @@ export default function InterviewPage() {
                   {msg.role === "assistant" ? <FiCpu className="text-white text-sm" /> : <FiUser className="text-white text-sm" />}
                 </div>
 
-                <div className={`flex flex-col gap-1 max-w-[75%] ${msg.role === "user" ? "items-end" : ""}`}>
+                <div className={`flex flex-col gap-1 max-w-[85%] sm:max-w-[75%] ${msg.role === "user" ? "items-end" : ""}`}>
                   <span className="text-xs text-[rgb(var(--fg-muted))] px-1 font-medium">
                     {msg.role === "assistant" ? "AI Interviewer" : (interviewConfig?.userName || "You")}
                   </span>
