@@ -64,16 +64,12 @@ async function buildLLM(temperature = 0.7) {
       apiKey: process.env.GOOGLE_API_KEY,
     });
   }
-  // 2. Groq fallback
+  // 2. Groq fallback (console.groq.com — free tier)
   if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== "your-groq-api-key-here") {
     const { ChatGroq } = await import("@langchain/groq");
-    return new ChatGroq({
-      model: "llama-3.3-70b-versatile",
-      temperature,
-      apiKey: process.env.GROQ_API_KEY,
-    });
+    return new ChatGroq({ model: "llama-3.3-70b-versatile", temperature, apiKey: process.env.GROQ_API_KEY });
   }
-  throw new Error("No LLM API key configured. Add GOOGLE_API_KEY to .env.local");
+  throw new Error("No LLM API key configured. Add GOOGLE_API_KEY to .env.local (get one free at aistudio.google.com)");
 }
 
 // ─── Retry wrapper for 429 / quota errors ────────────────────────────────────
